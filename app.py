@@ -83,12 +83,13 @@ theme = gr.themes.Monochrome(
 )
 
 system_examples = [
+    "You are a exceptional artist",
     "You are a exceptional artist who can express special moments in words and images.",
 ]
 
 prompt_examples = [
-    "Generate an image about soccer and kids.",
-    "Describe an image about soccer and kids.",
+    "Describe an image about ",
+    "Describe an image with kids playing in the park. ",
 ]
 
 text_models = [
@@ -100,7 +101,7 @@ text_models = [
 with gr.Blocks(title="Generate Text and Images", theme=theme) as demo:
     with gr.Column(variant="panel"):
         with gr.Row():
-            gr.Label("Generate Text and Images", container=False,)
+            gr.Markdown("# Generate Text and Images",)
         with gr.Row():
             with gr.Column(variant="panel", scale=3):
                 with gr.Row():
@@ -132,7 +133,8 @@ with gr.Blocks(title="Generate Text and Images", theme=theme) as demo:
                         placeholder="Image URL",
                         container=False,
                         interactive=False,
-                        lines=3,
+                        lines=5,
+                        show_copy_button=True,
                     )
 
                 gallery = gr.Gallery(
