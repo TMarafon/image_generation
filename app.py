@@ -5,7 +5,10 @@ import openai
 
 import gradio as gr
 
-openai.api_key = os.environ["OPENAI_API_KEY"]
+
+def init_auth():
+    global authenticated
+    globals()['authenticated'] = False
 
 def fake_gan():
     images = [
@@ -34,18 +37,45 @@ def get_prompt(text_system: str, query: str) -> list:
         }
     ]
 
-def generate_text(text_system, text_prompt, max_tokens: int, text_model: str, temperature: float):
+async def generate_text(text_system, text_prompt, max_tokens: int, text_model: str, temperature: float):
+    if not globals()['authenticated']:
+        gr.Warning("Please enter a valid API key")
+        return
+    
+    print(globals()['authenticated'])
+    
+    if not text_prompt:
+        gr.Warning("Please enter your prompt")
+        return
+
+    print()
+    print("Inference parameters:")
     print(text_system, text_prompt, max_tokens, text_model, temperature)
+    print()
+    print()
 
-    creation = openai.ChatCompletion.create(
-        model=text_model,
-        messages=get_prompt(text_system, text_prompt),
-        temperature=temperature,
-        max_tokens=max_tokens,
-    )
+    try:
+        creation = openai.ChatCompletion.create(
+            model=text_model,
+            messages=get_prompt(text_system, text_prompt),
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
 
-    print(creation)
-    return creation.choices[0].message.content
+        print(creation)
+        return creation.choices[0].message.content
+    except Exception as e:
+        gr.Warning(e)
+        return "Error"
+
+async def save_key(api_key):
+    try:
+        openai.api_key = api_key
+        openai.Model.list()
+        globals()['authenticated'] = True
+        print(globals()['authenticated'])
+    except Exception as e:
+        gr.Warning("Invalid API key")
 
 # APP
 theme = gr.themes.Monochrome(
@@ -67,8 +97,10 @@ text_models = [
     "gpt-4",
 ]
 
-with gr.Blocks(title="Fake Gan", theme=theme) as demo:
+with gr.Blocks(title="Generate Text and Images", theme=theme) as demo:
     with gr.Column(variant="panel"):
+        with gr.Row():
+            gr.Label("Generate Text and Images", container=False,)
         with gr.Row():
             with gr.Column(variant="panel", scale=3):
                 with gr.Row():
@@ -142,12 +174,42 @@ with gr.Blocks(title="Fake Gan", theme=theme) as demo:
                         container=True,
                     )
 
-    btn_img.click(fake_gan, None, gallery)
-    btn_txt.click(
-        fn=generate_text,
-        inputs=[text_system,text_prompt,max_tokens, text_model, temperature], 
-        outputs=output
-    )
+                with gr.Row():
+                    api_key = gr.Textbox(
+                        type="password",
+                        label="OpenAI API Key",
+                        scale=5,
+                        container=True,
+                    )
+                with gr.Row():
+                    save_key_btn = gr.Button(
+                        value="Save",
+                        size="sm",
+                        scale=1,
+                    )
+            
+
+    try: 
+        btn_img.click(fake_gan, None, gallery)
+        btn_txt.click(
+            fn=generate_text,
+            inputs=[text_system,text_prompt,max_tokens, text_model, temperature], 
+            outputs=output,
+            batch=False,
+            trigger_mode="once",
+            show_progress=True,
+        )
+        save_key_btn.click(
+            fn=save_key,
+            inputs=[api_key], 
+            outputs=None,
+            batch=False,
+            trigger_mode="once",
+            show_progress=True,
+        )
+    except Exception as e:
+        gr.Warning(e)
 
 if __name__ == "__main__":
+    init_auth()
     demo.launch()
