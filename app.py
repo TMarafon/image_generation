@@ -21,7 +21,7 @@ async def generate_image(prompt:str, size: str):
         result = response['data']
         url = result[0]['url']
         print(url)
-        return [[url], url]
+        return [url,[url]]
     except Exception as e:
         gr.Warning(e)
         return ["Error"]
@@ -73,6 +73,7 @@ async def save_key(api_key):
         openai.Model.list()
         globals()['authenticated'] = True
         print(globals()['authenticated'])
+        gr.Info("API key saved")
     except Exception as e:
         gr.Warning("Invalid API key")
 
@@ -130,7 +131,8 @@ with gr.Blocks(title="Generate Text and Images", theme=theme) as demo:
                     img_url = gr.Textbox(
                         placeholder="Image URL",
                         container=False,
-                        interactive=False
+                        interactive=False,
+                        lines=3,
                     )
 
                 gallery = gr.Gallery(
@@ -205,7 +207,7 @@ with gr.Blocks(title="Generate Text and Images", theme=theme) as demo:
             
 
     try: 
-        btn_img.click(generate_image, [output, img_size], [gallery,img_url])
+        btn_img.click(generate_image, [output, img_size], [img_url, gallery])
         btn_txt.click(
             fn=generate_text,
             inputs=[text_system,text_prompt,max_tokens, text_model, temperature], 
