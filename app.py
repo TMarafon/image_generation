@@ -10,17 +10,18 @@ def init_auth():
     global authenticated
     globals()['authenticated'] = False
 
-async def generate_image(prompt:str):
+async def generate_image(prompt:str, size: str):
     try:
         response = openai.Image.create(
             prompt=prompt,
             n=1,
-            size="512x512"
+            size=size,
         )
         
         result = response['data']
-        print(result)
-        return [result[0]['url']]
+        url = result[0]['url']
+        print(url)
+        return [[url], url]
     except Exception as e:
         gr.Warning(e)
         return ["Error"]
@@ -116,12 +117,20 @@ with gr.Blocks(title="Generate Text and Images", theme=theme) as demo:
                         container=False,
                         lines=3,
                     )
+                
                 with gr.Row():
                     output = gr.Textbox(
                         max_lines=10,
                         container=False,
                         lines=10,
                         interactive=True
+                    )
+
+                with gr.Row():
+                    img_url = gr.Textbox(
+                        placeholder="Image URL",
+                        container=False,
+                        interactive=False
                     )
 
                 gallery = gr.Gallery(
@@ -172,6 +181,13 @@ with gr.Blocks(title="Generate Text and Images", theme=theme) as demo:
                         step=0.1,
                         container=True,
                     )
+                
+                with gr.Row():
+                    img_size = gr.Dropdown(
+                        label="Image size",
+                        choices=['1024x1024', '512x512', '256x256'],
+                        value="256x256",
+                    )
 
                 with gr.Row():
                     api_key = gr.Textbox(
@@ -189,7 +205,7 @@ with gr.Blocks(title="Generate Text and Images", theme=theme) as demo:
             
 
     try: 
-        btn_img.click(generate_image, output, gallery)
+        btn_img.click(generate_image, [output, img_size], [gallery,img_url])
         btn_txt.click(
             fn=generate_text,
             inputs=[text_system,text_prompt,max_tokens, text_model, temperature], 
