@@ -11,3 +11,6 @@ license: mit
 ---
 
 Demo: https://tmarafon2-image-generation.hf.space
+
+![image](https://github.com/TMarafon/image_generation/assets/6439179/e953aad5-6ac4-4089-b4f0-3494fc95655b)
+
