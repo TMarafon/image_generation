@@ -1,10 +1,6 @@
 import os
-import random # remove this line after removing the example
-
 import openai
-
 import gradio as gr
-
 
 def init_auth():
     global authenticated
