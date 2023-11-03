@@ -10,20 +10,20 @@ def init_auth():
     global authenticated
     globals()['authenticated'] = False
 
-def fake_gan():
-    images = [
-        (random.choice(
-            [
-                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80",
-                "https://images.unsplash.com/photo-1554151228-14d9def656e4?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=386&q=80",
-                "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8aHVtYW4lMjBmYWNlfGVufDB8fDB8fA%3D%3D&w=1000&q=80",
-                "https://images.unsplash.com/photo-1546456073-92b9f0a8d413?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80",
-                "https://images.unsplash.com/photo-1601412436009-d964bd02edbc?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=464&q=80",
-            ]
-        ), f"label {i}" if i != 0 else "label" * 50)
-        for i in range(3)
-    ]
-    return images
+async def generate_image(prompt:str):
+    try:
+        response = openai.Image.create(
+            prompt=prompt,
+            n=1,
+            size="512x512"
+        )
+        
+        result = response['data']
+        print(result)
+        return [result[0]['url']]
+    except Exception as e:
+        gr.Warning(e)
+        return ["Error"]
 
 def get_prompt(text_system: str, query: str) -> list:
     return [
@@ -41,8 +41,6 @@ async def generate_text(text_system, text_prompt, max_tokens: int, text_model: s
     if not globals()['authenticated']:
         gr.Warning("Please enter a valid API key")
         return
-    
-    print(globals()['authenticated'])
     
     if not text_prompt:
         gr.Warning("Please enter your prompt")
@@ -123,6 +121,7 @@ with gr.Blocks(title="Generate Text and Images", theme=theme) as demo:
                         max_lines=10,
                         container=False,
                         lines=10,
+                        interactive=True
                     )
 
                 gallery = gr.Gallery(
@@ -190,7 +189,7 @@ with gr.Blocks(title="Generate Text and Images", theme=theme) as demo:
             
 
     try: 
-        btn_img.click(fake_gan, None, gallery)
+        btn_img.click(generate_image, output, gallery)
         btn_txt.click(
             fn=generate_text,
             inputs=[text_system,text_prompt,max_tokens, text_model, temperature], 
